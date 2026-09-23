@@ -101,7 +101,7 @@ jobs:
           echo "Partisi harddisk ditemukan! Menggabungkan berkas secara berurutan..."
           
           # Menggunakan sort untuk memastikan aa, ab, ac... digabungkan dengan benar
-          ls win11-vm-data/win11-vm.qcow2.part_?? | sort | xargs cat > /workspaceskvm_storage/win11-vm.qcow2
+          ls win11-vm-data/win11-vm.qcow2.part_?? | sort | xargs cat > /workspaces/kvm_storage/win11-vm.qcow2
           
           # Validasi apakah hasil penggabungan menghasilkan format qcow2 yang valid
           echo "Memverifikasi integritas file hasil penggabungan:"
