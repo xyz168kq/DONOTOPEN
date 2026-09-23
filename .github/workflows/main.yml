@@ -13,11 +13,6 @@ jobs:
       with:
         fetch-depth: 0
 
-    - name: Unduh File Asli dari Git LFS
-      run: |
-        git lfs install
-        git lfs pull
-
     - name: Instal KVM, Virt-Install, Alat Jaringan & Git LFS
       run: |
         sudo apt-get update
