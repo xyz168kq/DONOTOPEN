@@ -98,19 +98,19 @@ jobs:
         
     - name: Cek Harddisk Lama (Auto-Load) atau Siapkan Installer Baru
       run: |
-        sudo mkdir -p /home/runner/work/kvm_storage
-        sudo chmod 777 /home/runner/work/kvm_storage
+        sudo mkdir -p /workspaces/kvm_storage
+        sudo chmod 777 /workspaces/kvm_storage
         
         # PERBAIKAN DI SINI: Deteksi file partisi, urutkan alfabetis, lalu gabungkan
         if [ -d "win11-vm-data" ] && ls win11-vm-data/win11-vm.qcow2.part_?? 1> /dev/null 2>&1; then
           echo "Partisi harddisk ditemukan! Menggabungkan berkas secara berurutan..."
           
           # Menggunakan sort untuk memastikan aa, ab, ac... digabungkan dengan benar
-          ls win11-vm-data/win11-vm.qcow2.part_?? | sort | xargs cat > /home/runner/work/kvm_storage/win11-vm.qcow2
+          ls win11-vm-data/win11-vm.qcow2.part_?? | sort | xargs cat > /workspaceskvm_storage/win11-vm.qcow2
           
           # Validasi apakah hasil penggabungan menghasilkan format qcow2 yang valid
           echo "Memverifikasi integritas file hasil penggabungan:"
-          qemu-img info /home/runner/work/kvm_storage/win11-vm.qcow2
+          qemu-img info /workspaces/kvm_storage/win11-vm.qcow2
           
           echo "BOOT_MODE=saved" >> $GITHUB_ENV
         else
@@ -118,7 +118,7 @@ jobs:
           echo "Unduh ISO Windows 11..."
           cd /tmp
           wget "https://downloads.sourceforge.net/project/tiny-11-releases/Tiny11-Pro-25H2/Tiny11-25H2-26200.8037-English-Pro-2026-08-23.iso?ts=gAAAAABqrkuCHuAxtCTNsPOiCteIlpi80gz7LU8KIEcEhA4LmNCZDQu54p48ONrGbnq8F0RlrGw3vHAPOY12mfkEuioHGvMz2A%3D%3D&r=https%3A%2F%2Fsourceforge.net%2Fprojects%2Ftiny-11-releases%2Ffiles%2Flatest%2Fdownload" -O installer.iso
-          cd /home/runner/work/DONOTOPEN/DONOTOPEN/
+          cd /workspaces/DONOTOPEN/
           echo "BOOT_MODE=new" >> $GITHUB_ENV
         fi
 
@@ -127,7 +127,7 @@ jobs:
         if [ "${{ env.BOOT_MODE }}" = "new" ]; then
           cd /tmp
           qemu-img create -f qcow2 win11-vm.qcow2 64G
-          cd /home/runner/work/kvm_storage/
+          cd /workspaces/kvm_storage/
           cp /usr/share/OVMF/OVMF_VARS_4M.fd /tmp/win11_vars.fd
           echo "Memulai VM baru dari CD-ROM (RAM 4096)..."
           # Menambahkan sparse=true agar file qcow2 dibuat secara dinamis (ringan)
@@ -174,7 +174,7 @@ jobs:
           -chardev socket,id=chrtpm,path=/tmp/emulated_tpm/swtpm-sock \
           -tpmdev emulator,id=tpm0,chardev=chrtpm \
           -device tpm-tis,tpmdev=tpm0 \
-          -drive file=/home/runner/work/kvm_storage/win11-vm.qcow2,format=qcow2,id=hd0,if=none \
+          -drive file=/workspaces/kvm_storage/win11-vm.qcow2,format=qcow2,id=hd0,if=none \
           -device nvme,drive=hd0,serial=nvme-disk0 \
           -boot order=c \
           -net nic,model=e1000e -net user \
@@ -186,7 +186,7 @@ jobs:
          fi
     - name: Jembatani dengan Websockify & Buka Jalur Link Browser
       run: |
-        cd /home/runner/work/DONOTOPEN/DONOTOPEN
+        cd /workspaces/DONOTOPEN/DONOTOPEN
         websockify --web /usr/share/novnc/ 6080 localhost:5901 &
         # 1. Pastikan Node.js dan npm terinstal
         sudo apt-get update && sudo apt-get install -y nodejs npm
@@ -225,15 +225,15 @@ jobs:
     - name: Auto-Save Perubahan Harddisk ke GitHub
       run: |
         # Kompres berkas dari /tmp ke storage internal actions
-        mv /home/runner/work/kvm_storage/win11-vm.qcow2 /home/runner/work/kvm_storage/win111-vm.qcow2
-        qemu-img convert -O qcow2 -c /home/runner/work/kvm_storage/win111-vm.qcow2 /home/runner/work/kvm_storage/win11-vm.qcow2
+        mv /workspaces/kvm_storage/win11-vm.qcow2 /workspaces/kvm_storage/win111-vm.qcow2
+        qemu-img convert -O qcow2 -c /workspaces/kvm_storage/win111-vm.qcow2 /workspaces/kvm_storage/win11-vm.qcow2
         
         # EDIT DI SINI: Membuat folder khusus dan membersihkan pecahan lama
         mkdir -p win11-vm-data
         rm -f win11-vm-data/win11-vm.qcow2.part_*
         
         # EDIT DI SINI: Potong file 14GB menjadi pecahan 1.5GB langsung ke dalam folder khusus
-        split -b 1500M /home/runner/work/kvm_storage/win11-vm.qcow2 win11-vm-data/win11-vm.qcow2.part_
+        split -b 1500M /workspaces/kvm_storage/win11-vm.qcow2 win11-vm-data/win11-vm.qcow2.part_
         
         # Konfigurasi Git LFS untuk folder khusus
         git config --global user.name "github-actions[bot]"
